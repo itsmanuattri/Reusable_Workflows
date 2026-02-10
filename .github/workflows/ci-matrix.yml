@@ -13,7 +13,7 @@ jobs:
       max-parallel: 4
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.9, 3.10, 3.11]
+        python-version: ["3.9", "3.10", "3.11"]
 
         exclude:
           - python-version: 3.9
@@ -50,7 +50,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: dist-3.11
+          name: dist-Linux-3.11
 
       - name: Run E2E tests
         run: pytest tests/e2e -q

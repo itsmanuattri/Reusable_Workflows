@@ -49,5 +49,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ inputs.python-version }}
+          name: dist-${{ runner.os }}-${{ inputs.python-version }}
           path: dist/*.whl
