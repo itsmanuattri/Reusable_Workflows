@@ -36,9 +36,12 @@ jobs:
       - run: pytest -q
 
       # Create dummy build output
+      - name : Create Build Artifact
       - run: |
+          rm -rf dist
           mkdir -p dist
           echo "dummy build" > dist/app.whl
+
 
       # Upload artifact for E2E usage
       - uses: actions/upload-artifact@v4
