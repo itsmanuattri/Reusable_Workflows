@@ -5,36 +5,29 @@ on:
   pull_request:
 
 jobs:
-  # MATRIX build job using reusable workflow
   build:
     name: Build (${{ matrix.os }} — py${{ matrix.python-version }})
 
     strategy:
       fail-fast: false
       max-parallel: 4
-
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: [3.9, 3.10, 3.11]
 
-        # Remove unsupported combinations
         exclude:
           - python-version: 3.9
 
-        # Add extra combinations
         include:
           - os: ubuntu-latest
             python-version: 3.12
             extra-label: preview
 
-    runs-on: ${{ matrix.os }}
-
     # Call reusable workflow
     uses: ./.github/workflows/python-build.yml
     with:
-       python-version: ${{ matrix.python-version }}
+      python-version: ${{ matrix.python-version }}
 
-  # E2E job runs once after ALL builds succeed
   e2e:
     name: End-to-End Tests
     needs: build
@@ -43,7 +36,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Set up Python for E2E
         uses: actions/setup-python@v5
         with:
@@ -54,7 +47,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Download artifact from one build
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
