@@ -1,4 +1,4 @@
-name: CI — matrix builds + E2E
+name: CI matrix builds + E2E
 
 on:
   push:
