@@ -1,7 +1,7 @@
 name: "Reusable: Python Build"
 
 on:
-  workflow_call:                 # makes this workflow callable by other workflows
+  workflow_call:
     inputs:
       python-version:
         description: "Python version"
@@ -12,16 +12,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # required to access source, tests, requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
-        # installs the Python version provided by the caller
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles('requirements.txt') }}
 
       - name: Install dependencies
         run: |
@@ -32,8 +37,17 @@ jobs:
             echo "requirements.txt missing — failing so caller sees error"
             exit 1
           fi
-        # fail early so caller gets clear feedback
 
       - name: Run unit tests
         run: pytest -q
-        # If tests fail, this job exits non-zero and caller receives failure
+
+      - name: Create build artifact
+        run: |
+          mkdir -p dist
+          echo "dummy build output" > dist/app.whl
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ inputs.python-version }}
+          path: dist/*.whl

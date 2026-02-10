@@ -5,36 +5,60 @@ on:
   pull_request:
 
 jobs:
-  # MATRIX: runs the reusable build for each python-version in the matrix
+  # MATRIX build job using reusable workflow
   build:
+    name: Build (${{ matrix.os }} — py${{ matrix.python-version }})
+
     strategy:
+      fail-fast: false
+      max-parallel: 4
+
       matrix:
-        python-version: ["3.10", "3.11"]   # add/remove versions as needed
-      fail-fast: false                     # allow full matrix to complete for diagnostics
-      max-parallel: 4                      # optional: limit concurrency
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.9, 3.10, 3.11]
+
+        # Remove unsupported combinations
+        exclude:
+          - python-version: 3.9
+
+        # Add extra combinations
+        include:
+          - os: ubuntu-latest
+            python-version: 3.12
+            extra-label: preview
+
+    runs-on: ${{ matrix.os }}
+
+    # Call reusable workflow
     uses: ./.github/workflows/python-build.yml
     with:
-      python-version: ${{ matrix.python-version }}
-    # Each matrix entry will call the reusable workflow with its python-version.
+       python-version: ${{ matrix.python-version }}
 
-  # E2E job: runs once after all matrix build runs succeed
+  # E2E job runs once after ALL builds succeed
   e2e:
-    needs: build                # waits for ALL matrix build runs to finish successfully
+    name: End-to-End Tests
+    needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # every job gets its own runner; checkout again
-
+        
       - name: Set up Python for E2E
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install deps for E2E
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      # Download artifact from one build
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-3.11
 
       - name: Run E2E tests
         run: pytest tests/e2e -q
